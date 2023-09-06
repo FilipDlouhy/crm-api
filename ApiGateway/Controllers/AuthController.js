@@ -41,6 +41,7 @@ const createUser = async (req, res) => {
         password: newUser.password,
         user_id: newUser.userId,
         role_ids: newUser.roles,
+        state: newUser.state,
       },
     ]);
 
@@ -86,7 +87,7 @@ const loginUser = async (req, res) => {
     // Set a cookie with the token
     res.cookie("token", token, {
       httpOnly: true, // Set the httpOnly option to true
-      maxAge: 30000, // Set maximum age in milliseconds
+      maxAge: 2 * 24 * 60 * 60 * 1000, // 2 days in milliseconds
     });
     console.log(token);
   } else {
@@ -99,7 +100,7 @@ const loginUser = async (req, res) => {
 };
 
 // checkLoginToken function is an asynchronous function that checks if a JWT token is present and valid
-const checkLoginToken = async (req, res, next) => {
+const checkLoginToken = async (req, res) => {
   try {
     // Fetch the token from the cookies
     const token = req.cookies.token;
