@@ -6,5 +6,9 @@ const userRouter = express.Router();
 userRouter.post("/user-create", userController.createUser);
 userRouter.get("/get-users", userController.getUsers);
 userRouter.post("/get-users-with-filter", userController.getUsers);
+userRouter.post("/delete-users", userController.deleteUsers);
+userRouter.get("/delete-user", userController.deleteUser);
+userRouter.post("/update-users-state", userController.updateUsersState);
+userRouter.get("/update-user-state", userController.updateUserState);
 
 module.exports = userRouter;

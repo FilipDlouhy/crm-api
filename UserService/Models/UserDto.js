@@ -1,8 +1,20 @@
 class UserDto {
   // Constructor for creating a new user instance
-  constructor(user_name, email, telNumber, roles, userId, state, date) {
+  constructor(
+    firstName,
+    lastName,
+    email,
+    telNumber,
+    roles,
+    userId,
+    state,
+    date
+  ) {
     // User's first name
-    this.user_name = user_name;
+    this.first_name = firstName;
+
+    // User's last name
+    this.last_name = lastName;
 
     // User's email address
     this.email = email;

@@ -49,7 +49,8 @@ const createUser = async (req, res) => {
     } else {
       // If there's no error, send a 201 status code with a success message
       const userDto = new UserDto(
-        newUser.firstName + " " + newUser.lastName,
+        newUser.firstName,
+        newUser.lastName,
         newUser.email,
         newUser.telNumber,
         newUser.roles,
@@ -81,7 +82,6 @@ const getUsers = async (req, res) => {
 
     if (req.body.filters != null) {
       req.body.filters.map((filter) => {
-        console.log(filter);
         query = query.ilike(filter.filterName, `%${filter.filterValue}%`);
       });
     }
@@ -94,7 +94,6 @@ const getUsers = async (req, res) => {
       });
     }
     const { data, error } = await query;
-    console.log("FUUU");
 
     // If there's an error, log it and send a 500 status code with an error message
     if (error) {
@@ -113,7 +112,100 @@ const getUsers = async (req, res) => {
   }
 };
 
+const deleteUsers = async (req, res) => {
+  try {
+    // Delete the user with the specified ID using Supabase
+
+    const { data, error } = await supabase
+      .from("user") // Replace with the actual table name
+      .delete()
+      .in("user_id", req.body.users); // Delete the user with the matching ID
+
+    if (error) {
+      // Handle the error
+
+      console.log(error);
+      return res.status(200).json({ error: "Failed to delete the users" });
+    }
+
+    return res.status(200).json({ error: false, message: "Users deleted" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+const deleteUser = async (req, res) => {
+  try {
+    // Delete the user with the specified ID using Supabase
+
+    const { data, error } = await supabase
+      .from("user") // Replace with the actual table name
+      .delete()
+      .in("user_id", [req.query.userId]); // Delete the user with the matching ID
+
+    if (error) {
+      // Handle the error
+
+      console.log(error);
+      return res.status(200).json({ error: "Failed to delete the user" });
+    }
+
+    return res.status(200).json({ error: false, message: "User deleted" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+const updateUsersState = async (req, res) => {
+  try {
+    // Update the user with the specified ID using Supabase
+
+    const { data, error } = await supabase
+      .from("user") // Replace with the actual table name
+      .update({ state: req.body.userState }) // Update the userName
+      .in("user_id", req.body.users); // For the user with the matching ID
+
+    if (error) {
+      // Handle the error
+
+      console.log(error);
+      return res.status(200).json({ error: "Failed to update the users" });
+    }
+
+    return res.status(200).json({ error: false, message: "Users updated" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+const updateUserState = async (req, res) => {
+  try {
+    // Update the user with the specified ID using Supabase
+    const { data, error } = await supabase
+      .from("user")
+      .update({ state: req.query.userState }) // Update the userName
+      .in("user_id", [req.query.userId]); // For the user with the matching ID
+
+    if (error) {
+      // Handle the error
+      console.log(error);
+      return res.status(200).json({ error: "Failed to update the users" });
+    }
+
+    return res.status(200).json({ error: false, message: "User updated" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
 module.exports = {
   createUser,
   getUsers,
+  deleteUsers,
+  deleteUser,
+  updateUsersState,
+  updateUserState,
 };
