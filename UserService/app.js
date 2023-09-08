@@ -29,7 +29,6 @@ const checkLoginToken = async (req, res, next) => {
 
     // Check if the token is not present
     if (!token || jwt.verify(token, secretKey) === false) {
-      console.log("KUNDO");
       res.status(401).json({ error: "Unauthorized" });
     } else {
       // If the token is present and valid, continue to the next middleware or route
@@ -83,7 +82,7 @@ const cacheMiddleware = (duration) => (req, res, next) => {
   }
 };
 // Apply the checkLoginToken middleware globally to all routes under /user
-app.use("/user", checkLoginToken, cacheMiddleware(60), userRoutes);
+app.use("/user", checkLoginToken, cacheMiddleware(30), userRoutes);
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);

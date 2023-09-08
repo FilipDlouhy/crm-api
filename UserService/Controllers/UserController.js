@@ -72,13 +72,15 @@ const createUser = async (req, res) => {
 
 const getUsers = async (req, res) => {
   try {
+    const page = req.body.page || req.query.page;
+
     let query = supabase
       .from("user")
       .select(
-        "tel_number, role_ids, user_id, state, created_at, email, first_name, last_name"
-      );
-
-    query = query.limit(40);
+        "tel_number, role_ids, user_id, state, created_at, email, first_name, last_name",
+        { count: "exact" }
+      )
+      .range((page - 1) * 25, page * 25);
 
     if (req.body.filters != null) {
       req.body.filters.map((filter) => {
@@ -93,7 +95,8 @@ const getUsers = async (req, res) => {
         });
       });
     }
-    const { data, error } = await query;
+
+    const { data, error, count } = await query;
 
     // If there's an error, log it and send a 500 status code with an error message
     if (error) {
@@ -104,7 +107,7 @@ const getUsers = async (req, res) => {
     }
 
     // If there's no error, send a 200 status code with the user data
-    res.status(200).json(data);
+    res.status(200).json({ data: data, count: count });
   } catch (error) {
     // If there's an error in the try block, log it and send a 500 status code with an error message
     console.error("Error fetching users:", error);
