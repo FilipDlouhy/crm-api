@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const app = express();
 const userRoutes = require("./Routes/UserRoutes");
+const roleRoutes = require("./Routes/RoleRoutes");
 const port = process.env.PORT || 7000;
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
@@ -82,6 +83,7 @@ const cacheMiddleware = (duration) => (req, res, next) => {
   }
 };
 // Apply the checkLoginToken middleware globally to all routes under /user
+app.use("/user/role", checkLoginToken, cacheMiddleware(30), roleRoutes);
 app.use("/user", checkLoginToken, cacheMiddleware(30), userRoutes);
 
 app.listen(port, () => {

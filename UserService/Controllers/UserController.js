@@ -39,7 +39,6 @@ const createUser = async (req, res) => {
         role_ids: newUser.roles,
       },
     ]);
-
     // If there's an error, log it and send a 500 status code with an error message
     if (error) {
       console.error("Error creating user:", error);
@@ -80,15 +79,15 @@ const getUsers = async (req, res) => {
         "tel_number, role_ids, user_id, state, created_at, email, first_name, last_name",
         { count: "exact" }
       )
-      .range((page - 1) * 25, page * 25);
+      .range((page - 1) * 25, page * 25 - 1);
 
-    if (req.body.filters != null) {
+    if (req.body.filters != null && req.body.filters.length > 0) {
       req.body.filters.map((filter) => {
         query = query.ilike(filter.filterName, `%${filter.filterValue}%`);
       });
     }
 
-    if (req.body.sortables != null) {
+    if (req.body.sortables != null && req.body.sortables.length > 0) {
       req.body.sortables.forEach((sortable) => {
         query = query.order(sortable.filterName, {
           ascending: sortable.ascending,
