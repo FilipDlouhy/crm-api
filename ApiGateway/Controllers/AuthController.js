@@ -70,13 +70,14 @@ const loginUser = async (req, res) => {
   // Fetching the user with the provided email from the 'user' table in the Supabase database
   const { data, error } = await supabase
     .from("user")
-    .select("user_id, password")
+    .select("user_id, password, roles")
     .eq("email", email)
     .single();
 
   // If there's an error, log it and send a 500 status code with an error message
   if (error) {
     console.error("Error fetching user:", error);
+
     return res.status(200).json({ error: "An email has not been found" });
   }
 
@@ -85,12 +86,14 @@ const loginUser = async (req, res) => {
     // Generate a JSON Web Token with the user's ID
     const token = jwt.sign(data.user_id, secretKey);
     // Set a cookie with the token
+
     res.cookie("token", token, {
       httpOnly: true, // Set the httpOnly option to true
       maxAge: 2 * 24 * 60 * 60 * 1000, // 2 days in milliseconds
     });
-    console.log(token);
   } else {
+    console.log("KOKOT");
+
     // If the user is not found or the password doesn't match, send a 401 status code with an error message
     return res.status(200).json({ error: "Invalid password" });
   }
@@ -104,15 +107,29 @@ const checkLoginToken = async (req, res) => {
   try {
     // Fetch the token from the cookies
     const token = req.cookies.token;
-    console.log(token);
-
     // Check if the token is not present
     if (!token || jwt.verify(token, secretKey) === false) {
       // If the token is not present, send a 401 status code with an error message
+
       return res.status(200).json({ isLogged: false });
     }
 
-    return res.status(200).json({ isLogged: true });
+    const { data, error } = await supabase
+      .from("user")
+      .select("roles")
+      .eq("user_id", jwt.decode(token))
+      .single();
+
+    const roleIds = data.roles.map((role) => {
+      return role.role_id;
+    });
+
+    const { data: rights, error: roleError } = await supabase
+      .from("role")
+      .select("rights")
+      .in("role_id", roleIds);
+
+    return res.status(200).json({ isLogged: true, rights: rights });
 
     // If the token is present, verify the token
   } catch (error) {
@@ -124,9 +141,45 @@ const checkLoginToken = async (req, res) => {
   }
 };
 
+const getUserRights = async (req, res) => {
+  const token = req.cookies.token;
+  if (!token || jwt.verify(token, secretKey) === false) {
+    // If the token is not present, send a 401 status code with an error message
+
+    return res.status(200).json({ error: "Error while fetching rights" });
+  }
+
+  const { data, error } = await supabase
+    .from("user")
+    .select("roles")
+    .eq("user_id", jwt.decode(token))
+    .single();
+
+  const roleIds = data.roles.map((role) => {
+    return role.role_id;
+  });
+
+  if (error) {
+    console.error(error);
+    return res.status(200).json({ error: "Error while fetching rights" });
+  }
+  const { data: rights, error: roleError } = await supabase
+    .from("role")
+    .select("rights")
+    .in("role_id", roleIds);
+
+  if (roleError) {
+    console.error(roleError);
+    return res.status(200).json({ error: "Error while fetching rights" });
+  }
+
+  return res.status(200).json({ rights: rights });
+};
+
 // Exporting the createUser and loginUser functions
 module.exports = {
   createUser,
   loginUser,
   checkLoginToken,
+  getUserRights,
 };

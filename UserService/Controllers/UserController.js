@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt");
 const User = require("../Models/UserModel");
 const UserDto = require("../Models/UserDto");
 const { createClient } = require("@supabase/supabase-js");
+const jwt = require("jsonwebtoken");
 
 const supabaseUrl = "https://yziwqwcjwgvrmxhhruwv.supabase.co";
 const supabaseKey =
@@ -36,7 +37,7 @@ const createUser = async (req, res) => {
         tel_number: newUser.telNumber,
         password: newUser.password,
         user_id: newUser.userId,
-        role_ids: newUser.roles,
+        roles: newUser.roles,
       },
     ]);
     // If there's an error, log it and send a 500 status code with an error message
@@ -76,7 +77,7 @@ const getUsers = async (req, res) => {
     let query = supabase
       .from("user")
       .select(
-        "tel_number, role_ids, user_id, state, created_at, email, first_name, last_name",
+        "tel_number, roles, user_id, state, created_at, email, first_name, last_name",
         { count: "exact" }
       )
       .range((page - 1) * 25, page * 25 - 1);
@@ -203,6 +204,101 @@ const updateUserState = async (req, res) => {
     return res.status(500).json({ error: "Internal server error" });
   }
 };
+
+const updateUserRoles = async (req, res) => {
+  try {
+    // Fetch current roles of specified users from the database
+    const { data: currentRoles, error } = await supabase
+      .from("user")
+      .select("user_id, roles")
+      .in("user_id", req.body.users);
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+
+    let updatedUsers;
+
+    if (req.body.add) {
+      // If adding roles, combine roles and remove duplicates
+      updatedUsers = currentRoles.map((user) => {
+        // Create a Set to store unique role_id values
+        const uniqueRoleIds = new Set();
+
+        // Combine the existing roles with the new roles
+        const combinedRoles = [...req.body.roles, ...user.roles];
+
+        // Filter to keep only unique roles based on role_id
+        const uniqueRoles = combinedRoles.filter((role) => {
+          if (!uniqueRoleIds.has(role.role_id)) {
+            uniqueRoleIds.add(role.role_id);
+            return true;
+          }
+          return false;
+        });
+
+        return {
+          ...user,
+          roles: uniqueRoles,
+        };
+      });
+    } else {
+      // If removing roles, filter out specified role IDs
+      const roleIdsToRemove = req.body.roles.map((role) => role.role_id);
+
+      updatedUsers = currentRoles.map((user) => {
+        // Filter out roles to be removed
+        const updatedRoles = user.roles
+          .map((role) => {
+            if (!roleIdsToRemove.includes(role.role_id)) {
+              return role;
+            }
+          })
+          .filter((role) => role != null);
+
+        return {
+          ...user,
+          roles: updatedRoles,
+        };
+      });
+    }
+
+    const currentUserId = jwt.decode(req.cookies.token);
+    let isCurentChanged = false;
+    // Update the roles for each user in the database
+    for (const user of updatedUsers) {
+      if (user.user_id === currentUserId) {
+        isCurentChanged = true;
+      }
+      const { error } = await supabase
+        .from("user")
+        .update({ roles: user.roles })
+        .eq("user_id", user.user_id);
+
+      if (error) {
+        console.error(error);
+        return;
+      }
+    }
+
+    return res.status(200).json({
+      error: false,
+      message: req.body.add ? "Roles added" : "Roles delted",
+      updatedUsers: updatedUsers,
+      isCurentChanged: isCurentChanged,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(200).json({
+      error: true,
+      message: req.body.add
+        ? "Error while adding roles"
+        : "Error while deleting roles",
+    });
+  }
+};
+
 module.exports = {
   createUser,
   getUsers,
@@ -210,4 +306,5 @@ module.exports = {
   deleteUser,
   updateUsersState,
   updateUserState,
+  updateUserRoles,
 };
