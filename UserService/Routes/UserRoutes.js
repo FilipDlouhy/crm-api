@@ -11,5 +11,7 @@ userRouter.get("/delete-user", userController.deleteUser);
 userRouter.post("/update-users-state", userController.updateUsersState);
 userRouter.get("/update-user-state", userController.updateUserState);
 userRouter.post("/update-roles", userController.updateUserRoles);
+userRouter.post("/update-user", userController.updateUser);
+userRouter.get("/get-user-rights", userController.getUserRights);
 
 module.exports = userRouter;

@@ -92,8 +92,6 @@ const loginUser = async (req, res) => {
       maxAge: 2 * 24 * 60 * 60 * 1000, // 2 days in milliseconds
     });
   } else {
-    console.log("KOKOT");
-
     // If the user is not found or the password doesn't match, send a 401 status code with an error message
     return res.status(200).json({ error: "Invalid password" });
   }
@@ -104,6 +102,7 @@ const loginUser = async (req, res) => {
 
 // checkLoginToken function is an asynchronous function that checks if a JWT token is present and valid
 const checkLoginToken = async (req, res) => {
+  console.log("KUNDO");
   try {
     // Fetch the token from the cookies
     const token = req.cookies.token;
@@ -176,10 +175,18 @@ const getUserRights = async (req, res) => {
   return res.status(200).json({ rights: rights });
 };
 
+const logoutUser = (req, res) => {
+  // Clear the token cookie by setting it to an empty value and setting the expiration date in the past
+  res.cookie("token", "", { expires: new Date(0), httpOnly: true });
+
+  // Send a response indicating successful logout
+  res.json({ logout: true });
+};
 // Exporting the createUser and loginUser functions
 module.exports = {
   createUser,
   loginUser,
   checkLoginToken,
   getUserRights,
+  logoutUser,
 };

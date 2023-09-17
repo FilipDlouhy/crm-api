@@ -299,6 +299,58 @@ const updateUserRoles = async (req, res) => {
   }
 };
 
+const updateUser = async (req, res) => {
+  console.log(req.body);
+
+  const currentUserId = jwt.decode(req.cookies.token);
+  let isCurentChanged = false;
+
+  const { data, error } = await supabase
+    .from("user")
+    .update({
+      roles: req.body.roles,
+      email: req.body.email,
+      last_name: req.body.last_name,
+      first_name: req.body.first_name,
+      tel_number: req.body.tel_number,
+    })
+    .eq("user_id", req.body.user_id);
+
+  if (req.body.user_id === currentUserId) {
+    isCurentChanged = true;
+  }
+  if (error) {
+    // Handle the error
+    console.log(error);
+    return res.status(200).json({ error: "Failed to update the user" });
+  }
+
+  return res.status(200).json({
+    error: false,
+    isCurentChanged: isCurentChanged,
+  });
+};
+
+const getUserRights = async (req, res) => {
+  const currentUserId = jwt.decode(req.cookies.token);
+  const { data, error } = await supabase
+    .from("user")
+    .select("roles")
+    .eq("user_id", currentUserId)
+    .single();
+
+  const roleIds = data.roles.map((role) => {
+    return role.role_id;
+  });
+
+  const { data: rights, error: roleError } = await supabase
+    .from("role")
+    .select("rights")
+    .in("role_id", roleIds);
+
+  return res.status(200).json({ rights: rights });
+};
+
 module.exports = {
   createUser,
   getUsers,
@@ -307,4 +359,6 @@ module.exports = {
   updateUsersState,
   updateUserState,
   updateUserRoles,
+  updateUser,
+  getUserRights,
 };

@@ -131,9 +131,22 @@ const deleteRole = async (req, res) => {
   }
 };
 
+const updateRole = async (req, res) => {
+  const { data, error } = await supabase
+    .from("role")
+    .update({ role_name: req.body.role_name, rights: req.body.rights })
+    .in("role_id", [req.body.role_id]);
+  if (error) {
+    console.error("Error updating roles:", error);
+    return res.status(200).json({ error: "Error while updating roles" });
+  }
+  return res.status(200).json({ error: false });
+};
+
 module.exports = {
   createRole,
   getRoles,
   deleteRoles,
   deleteRole,
+  updateRole,
 };

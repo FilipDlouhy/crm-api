@@ -82,6 +82,7 @@ const cacheMiddleware = (duration) => (req, res, next) => {
     }
   }
 };
+
 // Apply the checkLoginToken middleware globally to all routes under /user
 app.use("/user/role", checkLoginToken, cacheMiddleware(30), roleRoutes);
 app.use("/user", checkLoginToken, cacheMiddleware(30), userRoutes);
