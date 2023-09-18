@@ -72,8 +72,10 @@ const createUser = async (req, res) => {
 
 const getUsers = async (req, res) => {
   try {
+    // Get the page number from the request body or query parameters
     const page = req.body.page || req.query.page;
 
+    // Create a Supabase query to fetch users with specified fields and pagination
     let query = supabase
       .from("user")
       .select(
@@ -82,12 +84,14 @@ const getUsers = async (req, res) => {
       )
       .range((page - 1) * 25, page * 25 - 1);
 
+    // Check if there are filters in the request and apply them using ilike (case-insensitive search)
     if (req.body.filters != null && req.body.filters.length > 0) {
       req.body.filters.map((filter) => {
-        query = query.ilike(filter.filterName, `%${filter.filterValue}%`);
+        query = query.ilike(filter.filterName, %${filter.filterValue}%);
       });
     }
 
+    // Check if there are sortable fields in the request and apply sorting
     if (req.body.sortables != null && req.body.sortables.length > 0) {
       req.body.sortables.forEach((sortable) => {
         query = query.order(sortable.filterName, {
@@ -96,6 +100,7 @@ const getUsers = async (req, res) => {
       });
     }
 
+    // Execute the query to fetch users, including count of total users
     const { data, error, count } = await query;
 
     // If there's an error, log it and send a 500 status code with an error message
@@ -106,7 +111,7 @@ const getUsers = async (req, res) => {
         .json({ error: "An error occurred while fetching users" });
     }
 
-    // If there's no error, send a 200 status code with the user data
+    // If there's no error, send a 200 status code with the user data and total count
     res.status(200).json({ data: data, count: count });
   } catch (error) {
     // If there's an error in the try block, log it and send a 500 status code with an error message
@@ -117,22 +122,28 @@ const getUsers = async (req, res) => {
 
 const deleteUsers = async (req, res) => {
   try {
-    // Delete the user with the specified ID using Supabase
+    // Delete users with the specified IDs using Supabase
 
+    // Attempt to delete users using Supabase
     const { data, error } = await supabase
-      .from("user") // Replace with the actual table name
+      .from("user") // Replace with the actual table name where users are stored
       .delete()
-      .in("user_id", req.body.users); // Delete the user with the matching ID
+      .in("user_id", req.body.users); // Delete users with matching IDs specified in the request body
 
+    // Check if there was an error during the deletion process
     if (error) {
-      // Handle the error
+      // Handle the error (logging it in this case)
 
       console.log(error);
+
+      // Return a 200 status with an error message indicating the failure
       return res.status(200).json({ error: "Failed to delete the users" });
     }
 
+    // If deletion is successful, return a 200 status with a success message
     return res.status(200).json({ error: false, message: "Users deleted" });
   } catch (error) {
+    // If there's an error in the try block, log it and return a 500 status with an error message
     console.error(error);
     return res.status(500).json({ error: "Internal server error" });
   }
@@ -142,20 +153,26 @@ const deleteUser = async (req, res) => {
   try {
     // Delete the user with the specified ID using Supabase
 
+    // Attempt to delete the user with the specified user_id using Supabase
     const { data, error } = await supabase
-      .from("user") // Replace with the actual table name
+      .from("user") // Replace with the actual table name where users are stored
       .delete()
-      .in("user_id", [req.query.userId]); // Delete the user with the matching ID
+      .in("user_id", [req.query.userId]); // Delete the user with the matching ID specified in the query parameter
 
+    // Check if there was an error during the deletion process
     if (error) {
-      // Handle the error
+      // Handle the error (logging it in this case)
 
       console.log(error);
+
+      // Return a 200 status with an error message indicating the failure
       return res.status(200).json({ error: "Failed to delete the user" });
     }
 
+    // If deletion is successful, return a 200 status with a success message
     return res.status(200).json({ error: false, message: "User deleted" });
   } catch (error) {
+    // If there's an error in the try block, log it and return a 500 status with an error message
     console.error(error);
     return res.status(500).json({ error: "Internal server error" });
   }
@@ -163,22 +180,28 @@ const deleteUser = async (req, res) => {
 
 const updateUsersState = async (req, res) => {
   try {
-    // Update the user with the specified ID using Supabase
+    // Update the state of users with the specified IDs using Supabase
 
+    // Attempt to update user states using Supabase
     const { data, error } = await supabase
-      .from("user") // Replace with the actual table name
-      .update({ state: req.body.userState }) // Update the userName
-      .in("user_id", req.body.users); // For the user with the matching ID
+      .from("user") // Replace with the actual table name where users are stored
+      .update({ state: req.body.userState }) // Update the 'state' field with the value from the request body
+      .in("user_id", req.body.users); // Update users with matching IDs specified in the request body
 
+    // Check if there was an error during the update process
     if (error) {
-      // Handle the error
+      // Handle the error (logging it in this case)
 
       console.log(error);
+
+      // Return a 200 status with an error message indicating the failure
       return res.status(200).json({ error: "Failed to update the users" });
     }
 
+    // If the update is successful, return a 200 status with a success message
     return res.status(200).json({ error: false, message: "Users updated" });
   } catch (error) {
+    // If there's an error in the try block, log it and return a 500 status with an error message
     console.error(error);
     return res.status(500).json({ error: "Internal server error" });
   }
@@ -186,20 +209,28 @@ const updateUsersState = async (req, res) => {
 
 const updateUserState = async (req, res) => {
   try {
-    // Update the user with the specified ID using Supabase
-    const { data, error } = await supabase
-      .from("user")
-      .update({ state: req.query.userState }) // Update the userName
-      .in("user_id", [req.query.userId]); // For the user with the matching ID
+    // Update the state of the user with the specified ID using Supabase
 
+    // Attempt to update the user's state using Supabase
+    const { data, error } = await supabase
+      .from("user") // Replace with the actual table name where users are stored
+      .update({ state: req.query.userState }) // Update the 'state' field with the value from the query parameter
+      .in("user_id", [req.query.userId]); // Update the user with the matching ID specified in the query parameter
+
+    // Check if there was an error during the update process
     if (error) {
-      // Handle the error
+      // Handle the error (logging it in this case)
+
       console.log(error);
-      return res.status(200).json({ error: "Failed to update the users" });
+
+      // Return a 200 status with an error message indicating the failure
+      return res.status(200).json({ error: "Failed to update the user" });
     }
 
+    // If the update is successful, return a 200 status with a success message
     return res.status(200).json({ error: false, message: "User updated" });
   } catch (error) {
+    // If there's an error in the try block, log it and return a 500 status with an error message
     console.error(error);
     return res.status(500).json({ error: "Internal server error" });
   }
@@ -207,7 +238,7 @@ const updateUserState = async (req, res) => {
 
 const updateUserRoles = async (req, res) => {
   try {
-    // Fetch current roles of specified users from the database
+    // Fetch the current roles of specified users from the database
     const { data: currentRoles, error } = await supabase
       .from("user")
       .select("user_id, roles")
@@ -265,11 +296,12 @@ const updateUserRoles = async (req, res) => {
     }
 
     const currentUserId = jwt.decode(req.cookies.token);
-    let isCurentChanged = false;
+    let isCurrentChanged = false;
+
     // Update the roles for each user in the database
     for (const user of updatedUsers) {
       if (user.user_id === currentUserId) {
-        isCurentChanged = true;
+        isCurrentChanged = true;
       }
       const { error } = await supabase
         .from("user")
@@ -284,9 +316,9 @@ const updateUserRoles = async (req, res) => {
 
     return res.status(200).json({
       error: false,
-      message: req.body.add ? "Roles added" : "Roles delted",
+      message: req.body.add ? "Roles added" : "Roles deleted",
       updatedUsers: updatedUsers,
-      isCurentChanged: isCurentChanged,
+      isCurrentChanged: isCurrentChanged,
     });
   } catch (error) {
     console.error(error);
@@ -300,55 +332,88 @@ const updateUserRoles = async (req, res) => {
 };
 
 const updateUser = async (req, res) => {
-  console.log(req.body);
+  try {
+    // Decode the current user's ID from the JWT token stored in cookies
+    const currentUserId = jwt.decode(req.cookies.token);
 
-  const currentUserId = jwt.decode(req.cookies.token);
-  let isCurentChanged = false;
+    // Initialize a flag to track if the current user's information is being changed
+    let isCurrentChanged = false;
 
-  const { data, error } = await supabase
-    .from("user")
-    .update({
-      roles: req.body.roles,
-      email: req.body.email,
-      last_name: req.body.last_name,
-      first_name: req.body.first_name,
-      tel_number: req.body.tel_number,
-    })
-    .eq("user_id", req.body.user_id);
+    // Attempt to update the user's information using Supabase
+    const { data, error } = await supabase
+      .from("user") // Replace with the actual table name where user information is stored
+      .update({
+        roles: req.body.roles,
+        email: req.body.email,
+        last_name: req.body.last_name,
+        first_name: req.body.first_name,
+        tel_number: req.body.tel_number,
+      })
+      .eq("user_id", req.body.user_id); // Update the user with the matching user_id specified in the request body
 
-  if (req.body.user_id === currentUserId) {
-    isCurentChanged = true;
+    // Check if the user being updated is the current user
+    if (req.body.user_id === currentUserId) {
+      isCurrentChanged = true;
+    }
+
+    // Check if there was an error during the update process
+    if (error) {
+      // Handle the error (logging it in this case)
+
+      console.log(error);
+
+      // Return a 200 status with an error message indicating the failure
+      return res.status(200).json({ error: "Failed to update the user" });
+    }
+
+    // If the update is successful, return a 200 status with a success message and the flag indicating if the current user's information changed
+    return res.status(200).json({
+      error: false,
+      isCurrentChanged: isCurrentChanged,
+    });
+  } catch (error) {
+    // If there's an error in the try block, log it and return a 500 status with an error message
+    console.error(error);
+    return res.status(500).json({ error: "Internal server error" });
   }
-  if (error) {
-    // Handle the error
-    console.log(error);
-    return res.status(200).json({ error: "Failed to update the user" });
-  }
-
-  return res.status(200).json({
-    error: false,
-    isCurentChanged: isCurentChanged,
-  });
 };
 
 const getUserRights = async (req, res) => {
-  const currentUserId = jwt.decode(req.cookies.token);
-  const { data, error } = await supabase
-    .from("user")
-    .select("roles")
-    .eq("user_id", currentUserId)
-    .single();
+  try {
+    // Decode the current user's ID from the JWT token stored in cookies
+    const currentUserId = jwt.decode(req.cookies.token);
 
-  const roleIds = data.roles.map((role) => {
-    return role.role_id;
-  });
+    // Fetch the roles of the current user from the database
+    const { data, error } = await supabase
+      .from("user") // Replace with the actual table name where user information is stored
+      .select("roles")
+      .eq("user_id", currentUserId) // Select the user with the matching user_id
+      .single(); // Expect a single user as the result
 
-  const { data: rights, error: roleError } = await supabase
-    .from("role")
-    .select("rights")
-    .in("role_id", roleIds);
+    // Extract the role IDs from the user's roles
+    const roleIds = data.roles.map((role) => {
+      return role.role_id;
+    });
 
-  return res.status(200).json({ rights: rights });
+    // Fetch the rights associated with the user's roles from the database
+    const { data: rights, error: roleError } = await supabase
+      .from("role") // Replace with the actual table name where role information is stored
+      .select("rights")
+      .in("role_id", roleIds); // Select roles with matching role IDs
+
+    // Check for errors in fetching roles or rights
+    if (error || roleError) {
+      console.error(error || roleError);
+      return res.status(200).json({ error: "Error while fetching rights" });
+    }
+
+    // Return a 200 status with the retrieved rights associated with the user's roles
+    return res.status(200).json({ rights: rights });
+  } catch (error) {
+    // If there's an error in the try block, log it and return a 500 status with an error message
+    console.error(error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
 };
 
 module.exports = {

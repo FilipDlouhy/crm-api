@@ -15,40 +15,66 @@ const limiter = rateLimit({
   max: 100, // Limit each IP to 100 requests per windowMs
 });
 
+// Define a middleware function that handles caching based on the provided duration
 const cacheMiddleware = (duration) => (req, res, next) => {
+  // Check if the HTTP request method is POST
   if (req.method === "POST") {
+    // Create a cache key based on the request URL and the request body (if present)
     let key =
-      "__express__" + (req.originalUrl || req.url) + JSON.stringify(req.body);
+      "_express_" + (req.originalUrl || req.url) + JSON.stringify(req.body);
+
+    // Try to retrieve the cached response for the given key
     let cachedBody = cache.get(key);
+
+    // If a cached response is found, send it as the HTTP response and return
     if (cachedBody) {
       console.log("Cache hit:", key);
       res.send(cachedBody);
       return;
     } else {
+      // If no cached response is found, set up caching for the response
       console.log("Cache miss:", key);
+
+      // Replace the res.send method with custom logic that caches the response
       res.sendResponse = res.send;
       res.send = (body) => {
+        // Cache the response body with the specified duration in seconds
         cache.put(key, body, duration * 1000);
         console.log("Cached:", key);
+        // Send the response as usual
         res.sendResponse(body);
       };
+
+      // Move to the next middleware or route handler
       next();
     }
   } else {
-    let key = "__express__" + (req.originalUrl || req.url);
+    // Handle caching for HTTP methods other than POST
+    let key = "_express_" + (req.originalUrl || req.url);
+
+    // Try to retrieve the cached response for the given key
     let cachedBody = cache.get(key);
+
+    // If a cached response is found, send it as the HTTP response and return
     if (cachedBody) {
       console.log("Cache hit:", key);
       res.send(cachedBody);
       return;
     } else {
+      // If no cached response is found, set up caching for the response
       console.log("Cache miss:", key);
+
+      // Replace the res.send method with custom logic that caches the response
       res.sendResponse = res.send;
       res.send = (body) => {
+        // Cache the response body with the specified duration in seconds
         cache.put(key, body, duration * 1000);
         console.log("Cached:", key);
+        // Send the response as usual
         res.sendResponse(body);
       };
+
+      // Move to the next middleware or route handler
       next();
     }
   }

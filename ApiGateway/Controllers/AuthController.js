@@ -102,7 +102,6 @@ const loginUser = async (req, res) => {
 
 // checkLoginToken function is an asynchronous function that checks if a JWT token is present and valid
 const checkLoginToken = async (req, res) => {
-  console.log("KUNDO");
   try {
     // Fetch the token from the cookies
     const token = req.cookies.token;
@@ -141,37 +140,46 @@ const checkLoginToken = async (req, res) => {
 };
 
 const getUserRights = async (req, res) => {
+  // Get the token from the request cookies
   const token = req.cookies.token;
-  if (!token || jwt.verify(token, secretKey) === false) {
-    // If the token is not present, send a 401 status code with an error message
 
+  // Check if the token is missing or invalid using jwt.verify
+  if (!token || jwt.verify(token, secretKey) === false) {
+    // If the token is not present or invalid, send a 401 status code with an error message
     return res.status(200).json({ error: "Error while fetching rights" });
   }
 
+  // Use Supabase to fetch user roles based on the decoded token
   const { data, error } = await supabase
     .from("user")
     .select("roles")
     .eq("user_id", jwt.decode(token))
     .single();
 
+  // Extract role IDs from the fetched data
   const roleIds = data.roles.map((role) => {
     return role.role_id;
   });
 
+  // Check for errors when fetching user roles
   if (error) {
     console.error(error);
     return res.status(200).json({ error: "Error while fetching rights" });
   }
+
+  // Use Supabase to fetch rights based on role IDs
   const { data: rights, error: roleError } = await supabase
     .from("role")
     .select("rights")
     .in("role_id", roleIds);
 
+  // Check for errors when fetching rights based on role IDs
   if (roleError) {
     console.error(roleError);
     return res.status(200).json({ error: "Error while fetching rights" });
   }
 
+  // If everything is successful, return the rights associated with the user's roles
   return res.status(200).json({ rights: rights });
 };
 

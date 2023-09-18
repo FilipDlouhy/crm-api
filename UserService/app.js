@@ -47,7 +47,7 @@ const checkLoginToken = async (req, res, next) => {
 const cacheMiddleware = (duration) => (req, res, next) => {
   if (req.method === "POST") {
     let key =
-      "__express__" + (req.originalUrl || req.url) + JSON.stringify(req.body);
+      "_express_" + (req.originalUrl || req.url) + JSON.stringify(req.body);
     let cachedBody = cache.get(key);
     if (cachedBody) {
       console.log("Cache hit:", key);
@@ -64,7 +64,7 @@ const cacheMiddleware = (duration) => (req, res, next) => {
       next();
     }
   } else {
-    let key = "__express__" + (req.originalUrl || req.url);
+    let key = "_express_" + (req.originalUrl || req.url);
     let cachedBody = cache.get(key);
     if (cachedBody) {
       console.log("Cache hit:", key);
