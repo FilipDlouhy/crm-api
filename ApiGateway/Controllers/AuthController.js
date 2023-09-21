@@ -70,7 +70,7 @@ const loginUser = async (req, res) => {
   // Fetching the user with the provided email from the 'user' table in the Supabase database
   const { data, error } = await supabase
     .from("user")
-    .select("user_id, password, roles")
+    .select("user_id, password, roles, state")
     .eq("email", email)
     .single();
 
@@ -82,7 +82,7 @@ const loginUser = async (req, res) => {
   }
 
   // If the user is found and the provided password matches the hashed password in the database
-  if (data && bcrypt.compareSync(password, data.password)) {
+  if (data && bcrypt.compareSync(password, data.password) && data.state !== 0) {
     // Generate a JSON Web Token with the user's ID
     const token = jwt.sign(data.user_id, secretKey);
     // Set a cookie with the token
@@ -93,7 +93,14 @@ const loginUser = async (req, res) => {
     });
   } else {
     // If the user is not found or the password doesn't match, send a 401 status code with an error message
-    return res.status(200).json({ error: "Invalid password" });
+
+    return res
+      .status(200)
+      .json({
+        error: (data.state = 0
+          ? "User has been deactivated"
+          : "Invalid password"),
+      });
   }
 
   // Send a success message

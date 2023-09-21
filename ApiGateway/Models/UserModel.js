@@ -25,7 +25,7 @@ class User {
     // Array to store the user's roles
     this.roles = [];
 
-    // Indicator of user's active status (0 deactivated, 1 pending, 2 active)
+    // Indicator of user's active status (0 deactivated, 1 active)
     this.state = 2;
   }
 

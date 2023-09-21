@@ -58,7 +58,7 @@ const getRoles = async (req, res) => {
     // Check if there are filters in the request and apply them using ilike (case-insensitive search)
     if (req.body.filters != null && req.body.filters.length > 0) {
       req.body.filters.map((filter) => {
-        query = query.ilike(filter.filterName, %${filter.filterValue}%);
+        query = query.ilike(filter.filterName, `%${filter.filterValue}%`);
       });
     }
 

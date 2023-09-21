@@ -97,10 +97,20 @@ const userServiceProxy = createProxyMiddleware("/user", {
   onProxyReq: fixRequestBody,
 });
 
+const contactServiceProxy = createProxyMiddleware("/contact", {
+  target: "http://localhost:4000",
+  changeOrigin: true,
+  withCredentials: true,
+  cookieDomainRewrite: false,
+  onProxyReq: fixRequestBody,
+});
+
 // Use the proxy middleware
 app.use("/user", limiter);
+app.use("/contact", limiter);
 
 app.use(userServiceProxy);
+app.use(contactServiceProxy);
 
 app.use("/", cacheMiddleware(15), authRoutes);
 
