@@ -94,13 +94,11 @@ const loginUser = async (req, res) => {
   } else {
     // If the user is not found or the password doesn't match, send a 401 status code with an error message
 
-    return res
-      .status(200)
-      .json({
-        error: (data.state = 0
-          ? "User has been deactivated"
-          : "Invalid password"),
-      });
+    return res.status(200).json({
+      error: (data.state = 0
+        ? "User has been deactivated"
+        : "Invalid password"),
+    });
   }
 
   // Send a success message

@@ -21,7 +21,7 @@ const cacheMiddleware = (duration) => (req, res, next) => {
   if (req.method === "POST") {
     // Create a cache key based on the request URL and the request body (if present)
     let key =
-      "_express_" + (req.originalUrl || req.url) + JSON.stringify(req.body);
+      "express" + (req.originalUrl || req.url) + JSON.stringify(req.body);
 
     // Try to retrieve the cached response for the given key
     let cachedBody = cache.get(key);
@@ -50,7 +50,7 @@ const cacheMiddleware = (duration) => (req, res, next) => {
     }
   } else {
     // Handle caching for HTTP methods other than POST
-    let key = "_express_" + (req.originalUrl || req.url);
+    let key = "express" + (req.originalUrl || req.url);
 
     // Try to retrieve the cached response for the given key
     let cachedBody = cache.get(key);

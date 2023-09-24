@@ -42,4 +42,3 @@ class User {
 
 // Export the User class to make it available for other modules
 module.exports = User;
-3;
