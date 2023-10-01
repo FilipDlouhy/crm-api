@@ -21,6 +21,7 @@ const contactSchema = new mongoose.Schema({
   worker_role: String,
   seniority: String,
   contact_id: String,
+  hired: Boolean,
 });
 
 const Contact = mongoose.model("Contact", contactSchema);

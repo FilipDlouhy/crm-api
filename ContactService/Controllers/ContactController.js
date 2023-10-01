@@ -9,11 +9,38 @@ const createContact = async (req, res) => {
   try {
     let contact;
 
-    if (
-      req.body.contact_type === "vendor" ||
-      req.body.contact_type === "customer"
-    ) {
-      if (req.body.organization_or_person === "person") {
+    switch (req.body.contact_type) {
+      case "vendor":
+      case "customer":
+        if (req.body.organization_or_person === "person") {
+          contact = new ContactModel.Contact({
+            first_name: req.body.first_name,
+            last_name: req.body.last_name,
+            email: req.body.email,
+            address: req.body.address,
+            organization_or_person: req.body.organization_or_person,
+            tel_number: req.body.tel_number,
+            contact_roles: [req.body.contact_type],
+            contact_id: req.body.contact_id,
+            worker_role: {},
+            seniority: "",
+            hired: false,
+          });
+        } else if (req.body.organization_or_person === "organization") {
+          contact = new ContactModel.Contact({
+            organization_name: req.body.organization_name,
+            email: req.body.email,
+            address: req.body.address,
+            organization_or_person: req.body.organization_or_person,
+            tel_number: req.body.tel_number,
+            contact_roles: [req.body.contact_type],
+            contact_id: req.body.contact_id,
+          });
+        }
+        break;
+
+      case "jobCandidate":
+      case "worker":
         contact = new ContactModel.Contact({
           first_name: req.body.first_name,
           last_name: req.body.last_name,
@@ -22,35 +49,12 @@ const createContact = async (req, res) => {
           organization_or_person: req.body.organization_or_person,
           tel_number: req.body.tel_number,
           contact_roles: [req.body.contact_type],
+          worker_role: req.body.worker_role,
+          seniority: req.body.seniority,
           contact_id: req.body.contact_id,
+          hired: req.body.contact_type === "worker " ? true : false,
         });
-      } else if (req.body.organization_or_person === "organization") {
-        contact = new ContactModel.Contact({
-          organization_name: req.body.organization_name,
-          email: req.body.email,
-          address: req.body.address,
-          organization_or_person: req.body.organization_or_person,
-          tel_number: req.body.tel_number,
-          contact_roles: [req.body.contact_type],
-          contact_id: req.body.contact_id,
-        });
-      }
-    } else if (
-      req.body.contact_type === "jobCandidate" ||
-      req.body.contact_type === "worker"
-    ) {
-      contact = new ContactModel.Contact({
-        first_name: req.body.first_name,
-        last_name: req.body.last_name,
-        email: req.body.email,
-        address: req.body.address,
-        organization_or_person: req.body.organization_or_person,
-        tel_number: req.body.tel_number,
-        contact_roles: [req.body.contact_type],
-        worker_role: req.body.worker_role,
-        seniority: req.body.seniority,
-        contact_id: req.body.contact_id,
-      });
+        break;
     }
 
     // Connect to MongoDB
@@ -82,19 +86,23 @@ const createContact = async (req, res) => {
 
 const getContacts = async (req, res) => {
   try {
-    const page = req.body.page || req.query.page;
-    console.log(page);
-    // Connect to MongoDB
     await mongoose.connect(mongoUrl, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
 
+    const contactType = req.body.contactType || req.query.contactType;
+    const page = req.body.page || req.query.page;
+
     // Fetch contacts using Mongoose
     let contacts;
-    if (req.body.filters || req.body.sortables) {
-      let criteria = {};
+    let criteria = {};
 
+    if (contactType) {
+      criteria["contact_roles"] = { $in: [contactType] };
+    }
+
+    if (req.body.filters || req.body.sortables) {
       if (req.body.filters.length > 0) {
         req.body.filters.forEach((filter) => {
           // Use the $regex operator with a regular expression pattern
@@ -115,9 +123,13 @@ const getContacts = async (req, res) => {
         .skip((page - 1) * 25)
         .limit(page * 25);
     } else {
-      contacts = await ContactModel.Contact.find({})
-        .skip((page - 1) * 25)
-        .limit(page * 25);
+      contacts = contactType
+        ? await ContactModel.Contact.find(criteria)
+            .skip((page - 1) * 25)
+            .limit(page * 25)
+        : await ContactModel.Contact.find()
+            .skip((page - 1) * 25)
+            .limit(page * 25);
     }
 
     let totalCount = await ContactModel.Contact.count();
@@ -129,9 +141,8 @@ const getContacts = async (req, res) => {
     res.status(200).json({ contacts: contacts, count: totalCount });
   } catch (error) {
     console.error("Error connecting or retrieving data:", error);
-    res.status(500).json({ error: "Failed to retrieve contacts" });
+    res.status(200).json({ error: "Failed to retrieve contacts" });
   } finally {
-    // Close the MongoDB connection
     await mongoose.connection.close();
     console.log("Disconnected from MongoDB");
   }
@@ -160,9 +171,40 @@ const removeContacts = async (req, res) => {
   }
 };
 
+const updateContact = async (req, res) => {
+  try {
+    await mongoose.connect(mongoUrl, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+
+    const contactId = req.body.contact_id; // get the contact_id from the request body
+
+    // Update contact using Mongoose
+    const updatedContact = await ContactModel.Contact.findOneAndUpdate(
+      { contact_id: contactId },
+      req.body,
+      { new: true }
+    );
+
+    if (!updatedContact) {
+      return res.status(404).json({ error: "Contact not found" });
+    }
+
+    res.status(200).json({ error: false });
+  } catch (error) {
+    console.error("Error connecting or updating data:", error);
+    res.status(200).json({ error: "Failed to update contact" });
+  } finally {
+    await mongoose.connection.close();
+    console.log("Disconnected from MongoDB");
+  }
+};
+
 // Export the createContact function for use in other parts of the application
 module.exports = {
   createContact,
   getContacts,
   removeContacts,
+  updateContact,
 };
