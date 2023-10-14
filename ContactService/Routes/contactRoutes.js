@@ -8,5 +8,9 @@ contactRouter.get("/get-contacts", ContactController.getContacts);
 contactRouter.post("/remove-contacts", ContactController.removeContacts);
 contactRouter.post("/get-contacts-with-filters", ContactController.getContacts);
 contactRouter.post("/update-contact", ContactController.updateContact);
+contactRouter.post(
+  "/change-contact-hire-status",
+  ContactController.changeContactHireStatus
+);
 
 module.exports = contactRouter;
