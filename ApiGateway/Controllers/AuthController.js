@@ -20,7 +20,7 @@ const createUser = async (req, res) => {
     const user = req.body; // Extracting user data from the request body
     const uniqueUserId = await uuid.v4(); // Generating a unique user ID
     const hashPassword = await bcrypt.hash(user.password, 10); // Hashing the user's password
-
+    console.log("BONJOUR");
     // Creating a new User instance with the provided data
     const newUser = new User(
       user.firstName,
