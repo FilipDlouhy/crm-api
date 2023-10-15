@@ -12,5 +12,6 @@ contactRouter.post(
   "/change-contact-hire-status",
   ContactController.changeContactHireStatus
 );
+contactRouter.post("/change-seniority", ContactController.updateSeniorityLevel);
 
 module.exports = contactRouter;

@@ -240,10 +240,55 @@ const changeContactHireStatus = async (req, res) => {
   }
 };
 
+const updateSeniorityLevel = async (req, res) => {
+  console.log("BONJOUR");
+  try {
+    if (
+      !Array.isArray(req.body.contactIdsToUpdate) ||
+      req.body.contactIdsToUpdate.length === 0
+    ) {
+      return res
+        .status(200)
+        .json({ error: "Invalid or empty contactIds array" });
+    }
+
+    await mongoose.connect(mongoUrl, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+
+    const contactIdsToUpdate = req.body.contactIdsToUpdate;
+    const seniorityLevel = req.body.seniorityLevel;
+
+    // Update contact using Mongoose
+    const updateResult = await ContactModel.Contact.updateMany(
+      { contact_id: { $in: contactIdsToUpdate } },
+      {
+        $set: {
+          seniority: seniorityLevel,
+        },
+      }
+    );
+
+    if (updateResult.nModified === 0) {
+      return res.status(200).json({ error: "No contacts found to update" });
+    }
+
+    res.status(200).json({ error: false });
+  } catch (error) {
+    console.error("Error connecting or updating data:", error);
+    res.status(200).json({ error: "Failed to update contact" });
+  } finally {
+    await mongoose.connection.close();
+    console.log("Disconnected from MongoDB");
+  }
+};
+
 module.exports = {
   createContact,
   getContacts,
   removeContacts,
   updateContact,
   changeContactHireStatus,
+  updateSeniorityLevel,
 };
